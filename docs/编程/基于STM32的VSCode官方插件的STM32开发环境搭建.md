@@ -35,8 +35,9 @@ permalink: /article/05um3mo2/
 - OpenOCD
 - Visual Studio Code
 
-### 软件安装和配置
+### 软件安装和配置 
 
+按照以下顺序安装和配置软件
 
 #### **STM32 CubeMX安装**
 
@@ -210,28 +211,125 @@ VS Code这个软件的安装，前往[官网](https://code.visualstudio.com/)下
 ### 硬件环境
 
 - STM32F103ZET6开发板
-- DAPLink调试器
+- STLink调试器/DAPLink调试器
 
 ### 功能
 
 让接在PG12的LED灯闪烁，通过烧录下载和调试仿真两种方式
 
+### STM32 CubeMX生成项目
 
+:::center
+![alt text](/blog_images/stm32-vscode/cubemx-new.png)
+:::
 
+打开STM32 CubeMX，搜索F103ZET6芯片，双击如图右下角筛选出的所需芯片。
+
+:::center
+![alt text](/blog_images/stm32-vscode/cubemx-selectchip.png)
+:::
+
+:::: steps
+1. **外设配置**
+   
+   System Core->SYS中的Debug选择Serial Wire
+
+   :::center
+   ![alt text](/blog_images/stm32-vscode/swd.png)
+   :::
+
+   System Core->RCC中的HSE选择外接晶振（我的开发板外接了晶振）
+
+   :::center
+   ![alt text](/blog_images/stm32-vscode/rcc.png)
+   :::
+
+   在**Pinout view**的下方搜索框找到连接LED灯的GPIO管脚，我的开发板上是PG12管脚，设置初始化为低电平，低速推挽输出，不接上拉也不接下拉。为了方便后续变成，为其赋予定制标签LED
+
+   :::center
+   ![alt text](/blog_images/stm32-vscode/pinout_view.png)
+
+   ![alt text](/blog_images/stm32-vscode/pinout_view2.png)
+
+   ![alt text](/blog_images/stm32-vscode/gpio.png)
+   :::
+
+2. **时钟配置**
+   
+   在Clock Configuration中为外设配置好工作时钟。我手上的开发板的外接晶振是8M，我打算利用STM32内部的锁相环倍频到最高的72MHz。
+
+   :::center
+   ![alt text](/blog_images/stm32-vscode/clock.png)
+   :::
+
+3. **项目配置**
+   
+   在Project Manager中，做最后的工程项目生成配置设置。设置项目工程文件夹以及工程名称，选择生成的Toolchain方案为**CMake**。
+
+   :::center
+   ![alt text](/blog_images/stm32-vscode/project-manage.png)
+   :::
+
+   在Code Generator中选择**Copy only the necessary library files**，这样项目只会将用到的外设的库文件添加到项目文件夹中，相对比较节省空间；勾选**Generate peripheral initialization as a pair of ‘.c/.h’ files per peripheral**，可以比较好地模块化外设的初始化以及相关功能代码。
+
+   :::center
+   ![alt text](/blog_images/stm32-vscode/code-gen.png)
+   :::
+   
+   至此即完成了设置，点击右上角的“GENERATE CODE”既可生成工程项目。记得直接点 “Close”。
+   
+   > [!important]
+   > **不要点“Open Folder”！点“Open Folder”会有概率卡死**
+
+   :::center
+   ![alt text](/blog_images/stm32-vscode/project-dir.png)
+   :::
+
+   自行前往生成的工程文件夹，可以看到CubeMX配置文件.ioc文件、启动文件.s文件、用于设置堆栈空间大小的链接脚本文件.ld文件、CMake相关的CMakelists.txt和CMakePresets.json文件。Core文件夹是STM32上的功能代码，届时我们编写的程序也将存放在此；Drivers文件夹是HAL库相关库文件。去掉示例项目中特有的项目名称和芯片型号，正常你生成的项目文件夹结构将如下
+
+   ::: file-tree 
+   - cmake/
+   - Core
+     - Inc/
+     - Src/
+   - Drivers
+     - CMSIS/
+     - STMxxxxxx_HAL_Driver/
+   - .mxproject
+   - CMakeLists.txt
+   - CMakePresets.json
+   - \$project_name\$.ioc
+   - startup_stmxxxxx.s
+   - stmxxxxxxx.ld
+   :::
+
+::::
+
+### VSCode中导入项目
+
+### 代码编写编译生成程序
+
+### 通过STLink烧录和调试
+
+### 通过DAPLink烧录和调试
+
+:::: steps
+1. **构建OpenOCD的config文件**
+   
+   d
+
+2. **添加烧录task的json配置并实现烧录**
+   
+   d
+
+3. **构建调试launch的json配置并实现调试**
+   
+   d
+
+::::
 
 ## 其他开发环境方案
 
 此处仅讨论HAL库开发！由于STM32官方已经舍弃了固件库的维护，并且固件库的学习成本和使用便捷度都不尽人意，因此个人觉得，在基于简单的任务了解完STM32底层结构以及固件库的工作原理之后，就不要在固件库里钻了。因此接下来的方案，都是基于HAL开发的方案。而且现阶段以及未来，开发工具也都是为HAL服务居多，固件库注定渐渐成为历史，顶多就是满足特殊需求的备选方案。具体的信息可以参考[STM32开发环境方案](/mcu/).
 
 
-::: file-tree 
-- cmake/
-- Core/
-- Drivers/
-- .mxproject
-- CMakeLists.txt
-- CMakePresets.json
-- \$project_name\$.ioc
-- startup_stmxxxxx.s
-- stmxxxxxxx.ld
-:::
