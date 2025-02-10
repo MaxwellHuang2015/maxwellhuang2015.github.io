@@ -148,9 +148,12 @@ Win+S -> 输入“环境变量” -> 点击“环境变量”->双击“系统�
 
 Win+R -> cmd -> 回车 -> 输入指令“openocd -v”，如果前边操作无误，此处可以得到OpenOCD返回输出的版本信息，类似下图。
 
+::: code-tabs
+@tab cmd.exe
 ```shell
 openocd -v
 ```
+:::
 
 ::: center
 ![alt text](/blog_images/stm32-vscode/openocd-cmd.png)
@@ -232,19 +235,19 @@ VS Code这个软件的安装，前往[官网](https://code.visualstudio.com/)下
 :::: steps
 1. **外设配置**
    
-   System Core->SYS中的Debug选择Serial Wire
+   ==System Core->SYS==中的Debug选择Serial Wire
 
    :::center
    ![alt text](/blog_images/stm32-vscode/swd.png)
    :::
 
-   System Core->RCC中的HSE选择外接晶振（我的开发板外接了晶振）
+   ==System Core->RCC==中的HSE选择外接晶振（我的开发板外接了晶振）
 
    :::center
    ![alt text](/blog_images/stm32-vscode/rcc.png)
    :::
 
-   在**Pinout view**的下方搜索框找到连接LED灯的GPIO管脚，我的开发板上是PG12管脚，设置初始化为低电平，低速推挽输出，不接上拉也不接下拉。为了方便后续变成，为其赋予定制标签LED
+   ==Pinout view==的下方搜索框找到连接LED灯的GPIO管脚，我的开发板上是PG12管脚，设置初始化为低电平，低速推挽输出，不接上拉也不接下拉。为了方便后续变成，为其赋予定制标签LED
 
    :::center
    ![alt text](/blog_images/stm32-vscode/pinout_view.png)
@@ -264,7 +267,7 @@ VS Code这个软件的安装，前往[官网](https://code.visualstudio.com/)下
 
 3. **项目配置**
    
-   在Project Manager中，做最后的工程项目生成配置设置。设置项目工程文件夹以及工程名称，选择生成的Toolchain方案为**CMake**。
+   在Project Manager中，做最后的工程项目生成配置设置。设置项目工程文件夹以及工程名称，选择生成的Toolchain方案为==CMake==。
 
    :::center
    ![alt text](/blog_images/stm32-vscode/project-manage.png)
@@ -276,10 +279,10 @@ VS Code这个软件的安装，前往[官网](https://code.visualstudio.com/)下
    ![alt text](/blog_images/stm32-vscode/code-gen.png)
    :::
    
-   至此即完成了设置，点击右上角的“GENERATE CODE”既可生成工程项目。记得直接点 “Close”。
+   至此即完成了设置，点击右上角的==GENERATE CODE==既可生成工程项目。记得直接点==Close==。
    
    > [!important]
-   > **不要点“Open Folder”！点“Open Folder”会有概率卡死**
+   > **不要点==Open Folder==！点==Open Folder==会有概率卡死**
 
    :::center
    ![alt text](/blog_images/stm32-vscode/project-dir.png)
@@ -307,29 +310,271 @@ VS Code这个软件的安装，前往[官网](https://code.visualstudio.com/)下
 
 ### VSCode中导入项目
 
+打开VSCode软件，如果提示“处于限制模式下”，点击“信任”。点击左侧边栏的STM32插件图标，进入到STM32插件功能界面。点击==Import CMake project==，选择刚刚生成的LED_Toggle项目文件夹。
+
+::: center
+![alt text](/blog_images/stm32-vscode/import-pj.png)
+
+![alt text](/blog_images/stm32-vscode/finishimport.png)
+:::
+
+随后在VSCode上方会自动弹出由插件识别得到的项目的相关信息，包括：项目目录地址、项目类型、项目的芯片以及工具链。确认无误点击弹出栏目的最后一项==Import project==即可完成项目的导入。随后VSCode右下角会弹出让你选择如何处理导入完成的项目文件夹。
+
+::: center
+![alt text](/blog_images/stm32-vscode/finishimport2.png)
+:::
+
+如果弹出“是否信任此文件夹中的文件的作者”，点击信任即可。此时可以看到，文件夹中自动生成生成添加了一些文件。
+
+::: center
+![alt text](/blog_images/stm32-vscode/cmakepj.png)
+:::
+
+正常情况下现在的文件结构会是这样的，.vscode是VSCode生成的存放与项目相关的配置文件和设置，后续我们的编译任务和调试任务所对应的相关操作就存储于此；build.ninja和底下的cmake都是关于CMake和ninja编译工具的相关文件。
+
+::: file-tree 
+- .vscode
+  - c_cpp_properties.json
+  - extensions.json
+  - launch.json
+  - tasks.json
+- cmake/
+- Core/
+  - Inc/
+  - Src/
+- Drivers/
+  - CMSIS/
+  - STMxxxxxx_HAL_Driver/
+- .mxproject
+- build.ninja
+- cmake_install.cmake
+- CMakeCache.txt
+- CMakeLists.txt
+- CMakePresets.json
+- \$project_name\$.ioc
+- startup_stmxxxxx.s
+- stmxxxxxxx.ld
+:::
+
+一般会自动弹出这个选择预设配置的窗口，选择Debug既可。后续也可以在侧边栏的==CMake->配置==栏目中切换选择CMakePresets.json中的不同配置。
+
+::: center
+![alt text](/blog_images/stm32-vscode/debugconfig.png)
+:::
+
 ### 代码编写编译生成程序
+
+我们在main.c中添加闪烁LED的代码。
+> [!important]
+> **注意自己的代码一定要写在已有代码的注释/\* USER CODE BEGIN xxx \*/和/\* USER CODE END xxx \*/之间**
+
+否则一旦后续去CubeMX更新配置，重新生成，就会被覆盖。接下来可以看到，VSCode在编辑器上的强大功能了——除了自动弹出匹配，还能显示函数的使用说明，这些都是不需要去做配置就自动具备的功能。
+
+::: center
+![alt text](/blog_images/stm32-vscode/coding.png)
+:::
+
+左侧的==大纲==可以查看当前代码文件中函数列表。
+
+::: center
+![alt text](/blog_images/stm32-vscode/maincode.png)
+:::
+
+完成编写后，点击下方状态栏的==生成==，若无误会输出代码的大小信息。
+
+::: center
+![alt text](/blog_images/stm32-vscode/build.png)
+
+![alt text](/blog_images/stm32-vscode/output.png)
+:::
+
+在输出框中可以看到相关的状态信息，如果代码有错误，此处会出错，可以看到左下角的打叉的图标上数量不为0，点击可以在==问题==栏中看到语法错误信息。
+
+::: center
+![alt text](/blog_images/stm32-vscode/problem.png)
+:::
+
+如果代码正常并且正常编译生成程序，会在./build/Debug文件夹里看到LED_Toggle.elf程序文件。
 
 ### 通过STLink烧录和调试
 
+#### 烧录
+
+如果使用的是STLink，那么烧录和调试的指令都已经自动生成了，只需要接好调试器，点点鼠标即可。在左边侧边栏中点开==CMake==菜单，点击下方的==固定的命令->运行任务==，上方会弹出已配置好的可运行的任务供选择。或者在菜单栏选择==终端->运行任务==。
+
+::: center
+![alt text](/blog_images/stm32-vscode/runtask.png)
+
+![alt text](/blog_images/stm32-vscode/runtask2.png)
+:::
+
+弹出的四个任务选项，其实就记载在了<strong>./.vscode/task.json</strong>文件中，
+
+- **CMake: clean rebuild**
+  
+  删除原本生成的程序并重新生成程序
+
+- **CubeProg: Flash project (SWD)**
+  
+  通过STLink将程序利用单片机的SWD口烧录到单片机上
+  
+- **CubeProg: List all available communication interfaces**
+  
+  用来列举电脑上现在有那些可供CubeProgammer利用来烧录STM32程序的接口
+
+- **Build + Flash**
+  
+  其实就是先执行“CMake: clean rebuild”任务以生成程序文件，然后再执行“CubeProg: Flash project (SWD)”以烧录程序。
+
+::: center
+![alt text](/blog_images/stm32-vscode/origintasks.png)
+:::
+
+我们之前已经生成了程序，这里只需要点击第三项==CubeProg: Flash project (SWD)==即可实现程序烧录下载。
+
+#### 调试
+
+点击侧边栏的==运行和调试==菜单，或者按下==Ctrl+Shift+D==，在菜单页面中，下拉框选择==Build & Debug Microcontroller – ST-Link==，然后点击左边的开始按键，即可通过STLink进入代码硬件调试。
+
+::: center
+![alt text](/blog_images/stm32-vscode/stlinkdebug.png)
+:::
+
+烧录和调试都需要用到STLink，如果显示STLink找不到的报错信息，可以尝试通过插件里的update STLink firmware给STLink升级，如果还是不行，那么大概率就是STLink是国产的存在兼容问题，那就转战DAPLink。
+
 ### 通过DAPLink烧录和调试
+
+> [!tip]
+> DAPLink全称是CMSIS DAPLink，所有ARM内核的单片机都能够使用的调试器，所以自然可以用来做为STM32的调试仿真器，但是！需要手动添加一点配置语句。
+
+在确保OpenOCD下载安装，并且系统环境变量已建立并且系统已经重启过，并且利用命令行验证过可行之后
 
 :::: steps
 1. **构建OpenOCD的config文件**
    
-   d
+   在工程文件夹根目录下，==文件->新建文本文件==，然后输入以下内容，并保存名为==openocd.cfg==。
+
+   ::: code-tabs
+   @tab openocd.cfg
+
+   ```properties
+   source [find interface/cmsis-dap.cfg];[!code word:cmsis-dap]
+   source [find target/stm32f1x.cfg];[!code word:stm32f1x]
+   reset_config none
+   ```
+   :::
+
+   ::: center
+   ![alt text](/blog_images/stm32-vscode/openocdcfg.png)
+   :::
+
+   **这里注意高亮的内容**
+   
+   第一个代表我们将使用CMSIS DAPLink调试器烧录调试，第二行代表我们要烧录调试的芯片是STM32F1系列的MCU，这两行必须根据工程所对应的单片机以及你所使用的调试器进行合适的调整！！具体OpenOCD还支持哪些调试器那些MCU，可以前往其官网查询，也可以直接到我们安装的OpenOCD软件的目录下<strong>./share/openocd/scripts/interface</strong>和<strong>./share/openocd/scripts/target</strong>查看。
+
+   ::: center
+   ![alt text](/blog_images/stm32-vscode/openocdsupport.png)
+   :::
 
 2. **添加烧录task的json配置并实现烧录**
    
-   d
+   在工程目录下的<strong>./.vscode/tasks.json</strong>文件中，添加入两个DAPLink烧录任务的json配置命令，分别标签命名为==DAPLink Flash project (SWD)== 和 ==Build + Flash (DAPLINK)==。
+
+   ::: code-tabs
+   @tab tasks.json
+
+   ```json
+   {
+        "type": "shell",
+        "label": "DAPLink Flash project (SWD)",
+        "command": "openocd",
+        "args": [
+            "-f",
+            "${workspaceRoot}\\openocd.cfg",
+            "-c",
+            "init",
+            "-c",
+            "halt",
+            "-c",
+            "\"flash write_image erase ${command:cmake.launchTargetFilename}\"",
+            "-c",
+            "reset",
+            "-c",
+            "shutdown"
+        ],
+        "options": {
+            "cwd": "${workspaceFolder}/build/${command:cmake.activeBuildPresetName}/"
+        },
+        "problemMatcher": []
+    },
+    {
+        "label": "Build + Flash (DAPLINK)",
+        "dependsOrder": "sequence",
+        "dependsOn": [
+            "CMake: clean rebuild",
+            "DAPLink Flash project (SWD)",
+        ],
+        "problemMatcher": []
+    },
+   ```
+   :::
+
+   保存之后，左边侧栏切换到CMake菜单，点击==运行任务==，会出现刚刚新添加的两个任务==DAPLink Flash project (SWD)== 和 ==Build + Flash (DAPLINK)==
+
+   ::: center
+   ![alt text](/blog_images/stm32-vscode/daptask.png)
+   :::
+
+   点击即可实现通过DAPLink烧录程序，和重新生成程序并通过DAPLink烧录。
 
 3. **构建调试launch的json配置并实现调试**
    
-   d
+   在工程目录下的<strong>./.vscode/launch.json</strong>文件中，根据我所使用的芯片合适地添加“Build & Debug - DAPLink”调试选项的json配置命令
+
+   ::: code-tabs
+   @tab launch.json
+
+   ```json
+   {
+        "name": "Build & Debug - DAPLink",
+        "cwd": "${workspaceFolder}",
+        "type": "cortex-debug",
+        "executable": "${command:cmake.launchTargetPath}",
+        "request": "launch",
+        "servertype": "openocd",
+        "device": "STM32F103ZETx", //MCU used[!code highlight]
+        "configFiles": [
+            "${workspaceRoot}/openocd.cfg"
+        ],
+        "interface": "swd",
+        "serialNumber": "",        //Set DAPLink ID if you use multiple at the same time
+        "runToEntryPoint": "main",
+        "svdFile": "${config:STM32VSCodeExtension.cubeCLT.path}/STMicroelectronics_CMSIS_SVD/STM32F103.svd"//[!code highlight]
+    },
+   ```
+   :::
+
+   ::: center
+   ![alt text](/blog_images/stm32-vscode/debugjson.png)
+   :::
+
+   > [!important]
+   > **其中的==device==和==svdFile==项目的值一定要从原本项目自动生成的关于STLink的调试命令配置的值复制粘贴过去！**
+
+   不同的工程项目由于开发的芯片有所不同，该两项的值也应相应做调整！而由项目自动生成的STLink的调试命令中是能保证与项目配置的芯片相匹配的！
+
+   ::: center
+   ![alt text](/blog_images/stm32-vscode/dapdebug.png)
+   :::
+
+   保存launch.json的修改之后，左侧栏的菜单切换到==运行和调试==，在下拉框中可以看到刚刚添加的==Build & Debug - DAPLink==。选择后，点击运行按钮，即可进入芯片的硬件调试。可以设置断点，查看相关变量和寄存器的值，以及所有外设的寄存器值。
+
+   ::: center
+   ![alt text](/blog_images/stm32-vscode/register.png)
+   :::
 
 ::::
 
 ## 其他开发环境方案
 
-此处仅讨论HAL库开发！由于STM32官方已经舍弃了固件库的维护，并且固件库的学习成本和使用便捷度都不尽人意，因此个人觉得，在基于简单的任务了解完STM32底层结构以及固件库的工作原理之后，就不要在固件库里钻了。因此接下来的方案，都是基于HAL开发的方案。而且现阶段以及未来，开发工具也都是为HAL服务居多，固件库注定渐渐成为历史，顶多就是满足特殊需求的备选方案。具体的信息可以参考[STM32开发环境方案](/mcu/).
-
-
+此处仅讨论HAL库开发！由于STM32官方已经舍弃了固件库的维护，并且固件库的学习成本和使用便捷度都不尽人意，因此个人觉得，在基于简单的任务了解完STM32底层结构以及固件库的工作原理之后，就不要在固件库里钻了。因此接下来的方案，都是基于HAL开发的方案。而且现阶段以及未来，开发工具也都是为HAL服务居多，固件库注定渐渐成为历史，顶多就是满足特殊需求的备选方案。具体的信息可以参考[STM32开发环境方案](/mcu/)。
