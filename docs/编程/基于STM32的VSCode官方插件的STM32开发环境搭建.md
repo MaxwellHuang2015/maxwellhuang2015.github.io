@@ -8,7 +8,7 @@ tags:
   - OpenOCD
   - 
 createTime: 2025/02/09 18:58:09
-permalink: /article/05um3mo2/
+permalink: /article/stm32-vscode/
 ---
 
 ## 前言碎碎念
