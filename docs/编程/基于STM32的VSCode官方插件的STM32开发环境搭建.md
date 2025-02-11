@@ -6,7 +6,7 @@ tags:
   - IDE
   - Toolchain
   - OpenOCD
-  - 
+  - 电子系统
 createTime: 2025/02/09 18:58:09
 permalink: /article/stm32-vscode/
 ---
