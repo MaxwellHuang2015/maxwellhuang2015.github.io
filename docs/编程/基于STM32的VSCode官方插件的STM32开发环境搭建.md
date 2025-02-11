@@ -370,6 +370,9 @@ VS Code这个软件的安装，前往[官网](https://code.visualstudio.com/)下
 
 否则一旦后续去CubeMX更新配置，重新生成，就会被覆盖。接下来可以看到，VSCode在编辑器上的强大功能了——除了自动弹出匹配，还能显示函数的使用说明，这些都是不需要去做配置就自动具备的功能。
 
+> [!important]
+> **如果没有上一步选择Debug预设配置的操作，自动匹配可能不全！所以一定要先选一下配置**
+
 ::: center
 ![alt text](/blog_images/stm32-vscode/coding.png)
 :::
@@ -430,7 +433,7 @@ VS Code这个软件的安装，前往[官网](https://code.visualstudio.com/)下
 ![alt text](/blog_images/stm32-vscode/origintasks.png)
 :::
 
-我们之前已经生成了程序，这里只需要点击第三项==CubeProg: Flash project (SWD)==即可实现程序烧录下载。
+我们之前已经生成了程序，这里只需要点击第三项==CubeProg: Flash project SWD==即可实现程序烧录下载。
 
 #### 调试
 
