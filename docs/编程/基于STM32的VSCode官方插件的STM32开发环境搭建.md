@@ -28,7 +28,7 @@ permalink: /article/stm32-vscode/
 
 ### 软件环境
 - Windows 10/11
-- STMSTM32 CubeMX（最低版本v6.11.0）
+- STM32 CubeMX（最低版本v6.11.0）
 - STM32 CubeCLT（最低版本v1.15.0）
 - OpenOCD
 - Visual Studio Code
